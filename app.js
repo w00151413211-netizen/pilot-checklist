@@ -60,6 +60,7 @@ function load() {
   if (!data.tabs.some(t => t.id === data.activeTabId)) {
     data.activeTabId = data.tabs.length ? data.tabs[0].id : null;
   }
+  if (!data.fuel || typeof data.fuel !== 'object') data.fuel = { date: '', dep: '', arr: '', total: '' };
 }
 
 function save() {
@@ -627,20 +628,108 @@ document.getElementById('confirmCancel').addEventListener('click', () => {
   m.addEventListener('click', (e) => { if (e.target === m) hideMask(m); });
 });
 
-/* ---------- 全部重置 ---------- */
+/* ---------- 全部重置（同时清空油单） ---------- */
 document.getElementById('btnResetAll').addEventListener('click', () => {
   const total = data.tabs.reduce((s, t) => s + t.items.filter(i => i.done).length, 0);
-  if (total === 0) return;
-  confirmDialog('全部重置', `将清除所有标签页共 ${total} 个勾选，确定吗？`, () => {
+  const hasFuel = fuelHasData();
+  if (total === 0 && !hasFuel) return;
+  const msg = total > 0
+    ? `将清除所有标签页共 ${total} 个勾选${hasFuel ? '，并清空油单' : ''}，确定吗？`
+    : '将清空油单全部填写内容，确定吗？';
+  confirmDialog('全部重置', msg, () => {
     data.tabs.forEach(t => t.items.forEach(i => i.done = false));
+    clearFuel();
     save();
     render();
   });
 });
 
+/* ---------- 油单 ---------- */
+const fuelOverlay = document.getElementById('fuelOverlay');
+const fuelDate = document.getElementById('fuelDate');
+const fuelDep = document.getElementById('fuelDep');
+const fuelArr = document.getElementById('fuelArr');
+const fuelTotal = document.getElementById('fuelTotal');
+const fuelMid = document.getElementById('fuelMid');
+const fuelDateWarn = document.getElementById('fuelDateWarn');
+const FUEL_RESERVE = 7.6;
+
+function fuelHasData() {
+  const f = data.fuel;
+  return !!(f.date || f.dep || f.arr || f.total);
+}
+
+function openFuel() { fuelOverlay.hidden = false; }
+function closeFuel() { fuelOverlay.hidden = true; }
+
+function renderFuel() {
+  const f = data.fuel;
+  fuelDate.value = f.date;
+  fuelDep.value = f.dep;
+  fuelArr.value = f.arr;
+  fuelTotal.value = f.total;
+  updateFuelMid();
+  updateFuelDateWarn();
+}
+
+/* 中间油量 = 总油量 - 7.6；小于 0 显示 0；输入为空则显示空 */
+function updateFuelMid() {
+  const raw = fuelTotal.value.trim();
+  if (raw === '') { fuelMid.textContent = ''; return; }
+  const v = parseFloat(raw);
+  if (isNaN(v)) { fuelMid.textContent = ''; return; }
+  const mid = Math.max(0, v - FUEL_RESERVE);
+  fuelMid.textContent = mid.toFixed(1);
+}
+
+/* 解析用户填写的日期，支持：YYYYMMDD、YYYY-MM-DD、YYYY/MM/DD、YYYY.MM.DD、MMDD（默认当年） */
+function parseFuelDate(s) {
+  const str = (s || '').trim();
+  if (!str) return null;
+  const d8 = str.replace(/\D/g, '');
+  if (/^\d{8}$/.test(d8)) return new Date(+d8.slice(0, 4), +d8.slice(4, 6) - 1, +d8.slice(6, 8));
+  if (/^\d{3,4}$/.test(d8)) { // MMDD / MDD：默认当前年
+    const now = new Date();
+    return new Date(now.getFullYear(), +d8.slice(0, -2) - 1, +d8.slice(-2));
+  }
+  return null;
+}
+
+/* 当前系统日期 > 填写日期 => 已过期 */
+function updateFuelDateWarn() {
+  const d = parseFuelDate(fuelDate.value);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const expired = d && d < today;
+  fuelDateWarn.hidden = !expired;
+}
+
+function onFuelInput() {
+  data.fuel = { date: fuelDate.value, dep: fuelDep.value, arr: fuelArr.value, total: fuelTotal.value };
+  save();
+  updateFuelMid();
+  updateFuelDateWarn();
+}
+
+[fuelDate, fuelDep, fuelArr, fuelTotal].forEach(el => el.addEventListener('input', onFuelInput));
+
+function clearFuel() {
+  data.fuel = { date: '', dep: '', arr: '', total: '' };
+  save();
+  renderFuel();
+}
+
+document.getElementById('btnFuel').addEventListener('click', openFuel);
+document.getElementById('fuelBack').addEventListener('click', closeFuel);
+document.getElementById('fuelReset').addEventListener('click', () => {
+  if (!fuelHasData()) return;
+  confirmDialog('重置油单', '将清空油单全部填写内容，确定吗？', clearFuel);
+});
+
 /* ---------- 启动 ---------- */
 load();
 render();
+renderFuel();
 
 /* 注册 Service Worker（离线缓存，需 HTTPS 或 localhost） */
 if ('serviceWorker' in navigator) {
