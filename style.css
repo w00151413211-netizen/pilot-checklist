@@ -2,8 +2,8 @@
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
 :root {
-  --gold: #D4AF37;
-  --gold-dark: #B8952B;
+  --green: #34A853;
+  --green-dark: #2C8C46;
   --text: #1a1a1a;
   --text-muted: #9a9a9a;
   --bg: #ffffff;
@@ -48,12 +48,12 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
 .btn-reset-all {
   font-size: 14px;
   font-weight: 600;
-  color: var(--gold-dark);
+  color: var(--green-dark);
   padding: 8px 14px;
   border-radius: 20px;
-  background: rgba(212, 175, 55, .12);
+  background: rgba(52, 168, 83, .12);
 }
-.btn-reset-all:active { background: rgba(212, 175, 55, .25); }
+.btn-reset-all:active { background: rgba(52, 168, 83, .25); }
 
 /* ============ 标签栏 ============ */
 .tab-bar {
@@ -125,7 +125,7 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
   z-index: 5;
 }
 .page-progress { font-size: 13px; color: var(--text-muted); font-weight: 500; }
-.page-progress b { color: var(--gold-dark); font-size: 15px; }
+.page-progress b { color: var(--green-dark); font-size: 15px; }
 .btn-reset-page {
   font-size: 13px;
   font-weight: 600;
@@ -158,7 +158,7 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
   font-weight: 600;
   color: #fff;
 }
-.item-actions .act-edit { background: var(--gold-dark); }
+.item-actions .act-edit { background: var(--green-dark); }
 .item-actions .act-del { background: var(--danger); }
 
 /* 内容层 */
@@ -201,8 +201,8 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
   transition: stroke-dashoffset .25s ease .05s;
 }
 .item-row.done .checkbox {
-  background: var(--gold);
-  border-color: var(--gold);
+  background: var(--green);
+  border-color: var(--green);
 }
 .item-row.done .checkbox svg { stroke-dashoffset: 0; }
 .checkbox.pop { animation: pop .25s ease; }
@@ -233,12 +233,12 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
   margin: 14px auto 0;
   font-size: 16px;
   font-weight: 600;
-  color: var(--gold-dark);
+  color: var(--green-dark);
   padding: 12px 28px;
   border-radius: 24px;
-  background: rgba(212, 175, 55, .10);
+  background: rgba(52, 168, 83, .10);
 }
-.add-item-btn:active { background: rgba(212, 175, 55, .22); }
+.add-item-btn:active { background: rgba(52, 168, 83, .22); }
 
 .empty-tip {
   text-align: center;
@@ -290,7 +290,7 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
   user-select: text;
   -webkit-user-select: text;
 }
-.sheet-input:focus { border-color: var(--gold); }
+.sheet-input:focus { border-color: var(--green); }
 
 .sheet-btns { display: flex; gap: 10px; }
 .sheet-btns .btn {
@@ -350,3 +350,21 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
 }
 .action-btn-danger { color: var(--danger); font-weight: 600; }
 .action-btn-cancel { border-bottom: none; font-weight: 700; }
+
+/* ============ 天气按钮 ============ */
+.header-left { display: flex; align-items: center; gap: 12px; }
+
+.btn-weather {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--green-dark);
+  text-decoration: none;
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: rgba(52, 168, 83, .12);
+  margin-top: 2px;
+}
+.btn-weather:active { background: rgba(52, 168, 83, .25); }
