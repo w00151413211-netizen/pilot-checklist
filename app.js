@@ -71,6 +71,9 @@ const tabBar = document.getElementById('tabBar');
 const pagesTrack = document.getElementById('pagesTrack');
 const pagesViewport = document.getElementById('pagesViewport');
 
+/* 标签栏排序模式（开启后标签可左右拖动排序） */
+let sortingMode = false;
+
 /* ---------- 渲染 ---------- */
 function render() {
   renderTabs();
@@ -87,6 +90,7 @@ function renderTabs() {
     el.textContent = tab.name;
     el.dataset.id = tab.id;
     el.addEventListener('click', () => {
+      if (sortingMode) return; // 排序模式下点击不切换
       if (data.activeTabId !== tab.id) {
         data.activeTabId = tab.id;
         save();
@@ -94,7 +98,14 @@ function renderTabs() {
       }
     });
     // 长按 500ms -> 标签页管理（重命名/删除）
-    attachLongPress(el, () => openTabActionSheet(tab));
+    attachLongPress(el, () => {
+      if (sortingMode) return;
+      openTabActionSheet(tab);
+    });
+    if (sortingMode) {
+      el.classList.add('sortable');
+      attachTabDrag(el);
+    }
     tabBar.appendChild(el);
   });
   const add = document.createElement('button');
@@ -103,6 +114,20 @@ function renderTabs() {
   add.textContent = '+';
   add.addEventListener('click', () => openTabSheet('add'));
   tabBar.appendChild(add);
+
+  // 排序开关：点开后可拖动标签排序
+  const sortBtn = document.createElement('button');
+  sortBtn.type = 'button';
+  sortBtn.className = 'tab-sort-toggle' + (sortingMode ? ' active' : '');
+  sortBtn.textContent = sortingMode ? '完成' : '≡ 排序';
+  sortBtn.addEventListener('click', () => {
+    sortingMode = !sortingMode;
+    renderTabs();
+    if (sortingMode) tabBar.scrollLeft = 0; // 排序时回到起点，避免标签被裁切
+    if (!sortingMode) save();
+  });
+  tabBar.appendChild(sortBtn);
+  tabBar.classList.toggle('sorting', sortingMode);
 }
 
 function renderPages() {
@@ -136,7 +161,7 @@ function renderPages() {
       page.appendChild(tip);
     }
 
-    tab.items.forEach(item => list.appendChild(buildItemRow(item)));
+    tab.items.forEach(item => list.appendChild(buildItemRow(item, tab, list)));
 
     const addBtn = document.createElement('button');
     addBtn.type = 'button';
@@ -158,7 +183,7 @@ function renderPages() {
   });
 }
 
-function buildItemRow(item) {
+function buildItemRow(item, tab, list) {
   const li = document.createElement('li');
   li.className = 'item-row' + (item.done ? ' done' : '');
   li.dataset.id = item.id;
@@ -168,6 +193,7 @@ function buildItemRow(item) {
       <button type="button" class="act-del">删除</button>
     </div>
     <div class="item-main">
+      <span class="item-grip" aria-label="拖动排序">≡</span>
       <span class="checkbox">${GOLD_CHECK_SVG}</span>
       <span class="item-text"></span>
     </div>
@@ -189,6 +215,7 @@ function buildItemRow(item) {
 
   // 点击文字 -> 操作弹窗（编辑/删除）
   li.querySelector('.item-main').addEventListener('click', (e) => {
+    if (e.target.closest('.item-grip')) return; // 手柄点击不触发
     if (li.dataset.swiped === '1') { // 已滑动状态：先复位
       resetSwipe(li);
       e.stopPropagation();
@@ -199,6 +226,8 @@ function buildItemRow(item) {
 
   // 左滑显示编辑/删除
   attachSwipe(li);
+  // 长按手柄拖动排序
+  attachItemDrag(li, list, tab);
   return li;
 }
 
@@ -274,6 +303,7 @@ function attachSwipe(li) {
   const OPEN_X = -148;
 
   main.addEventListener('touchstart', (e) => {
+    if (e.target.closest('.item-grip')) return; // 手柄不触发滑动
     sx = e.touches[0].clientX;
     sy = e.touches[0].clientY;
     sw = true; sh = null; moved = 0;
@@ -313,6 +343,114 @@ function resetSwipe(li) {
   main.style.transition = 'transform .22s ease-out';
   main.style.transform = 'translateX(0)';
   li.dataset.swiped = '0';
+}
+
+/* ---------- 检查项拖拽排序（竖向，手柄触发） ---------- */
+function attachItemDrag(li, list, tab) {
+  const grip = li.querySelector('.item-grip');
+  let startY = 0, dragging = false;
+
+  function onMove(e) {
+    if (!dragging) return;
+    li.style.transform = `translateY(${e.clientY - startY}px)`;
+    const rect = li.getBoundingClientRect();
+    const center = rect.top + rect.height / 2;
+    const sibs = [...list.children].filter(c => c !== li && c.classList.contains('item-row'));
+    for (const s of sibs) {
+      const r = s.getBoundingClientRect();
+      const c = r.top + r.height / 2;
+      const h = r.height + 1;
+      if (center > c && li.nextElementSibling === s) {
+        // 向下拖过下一个：插入到它之后
+        list.insertBefore(li, s.nextElementSibling);
+        startY += h;
+      } else if (center < c && li.previousElementSibling === s) {
+        // 向上拖过上一个：插入到它之前
+        list.insertBefore(li, s);
+        startY -= h;
+      }
+    }
+    e.preventDefault();
+  }
+
+  function onUp() {
+    if (!dragging) return;
+    dragging = false;
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    document.removeEventListener('pointercancel', onUp);
+    li.classList.remove('dragging');
+    li.style.transform = '';
+    const ids = [...list.querySelectorAll('.item-row')].map(x => x.dataset.id);
+    tab.items.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
+    save();
+  }
+
+  grip.addEventListener('pointerdown', (e) => {
+    dragging = true;
+    startY = e.clientY;
+    resetSwipe(li);
+    li.classList.add('dragging');
+    li.style.transition = 'none';
+    document.addEventListener('pointermove', onMove, { passive: false });
+    document.addEventListener('pointerup', onUp);
+    document.addEventListener('pointercancel', onUp);
+    e.preventDefault();
+  });
+}
+
+/* ---------- 标签页拖拽排序（横向，排序模式触发） ---------- */
+function attachTabDrag(el) {
+  let startX = 0, dragging = false;
+  const gap = 6;
+
+  function onMove(e) {
+    if (!dragging) return;
+    el.style.transform = `translateX(${e.clientX - startX}px)`;
+    const rect = el.getBoundingClientRect();
+    const center = rect.left + rect.width / 2;
+    const sibs = [...tabBar.querySelectorAll('.tab.sortable')].filter(s => s !== el);
+    for (const s of sibs) {
+      const r = s.getBoundingClientRect();
+      const c = r.left + r.width / 2;
+      const w = el.offsetWidth + gap;
+      if (center > c && el.nextElementSibling === s) {
+        // 向右拖过下一个：插入到它之后
+        tabBar.insertBefore(el, s.nextElementSibling);
+        startX += w;
+      } else if (center < c && el.previousElementSibling === s) {
+        // 向左拖过上一个：插入到它之前
+        tabBar.insertBefore(el, s);
+        startX -= w;
+      }
+    }
+    e.preventDefault();
+  }
+
+  function onUp() {
+    if (!dragging) return;
+    dragging = false;
+    document.removeEventListener('pointermove', onMove);
+    document.removeEventListener('pointerup', onUp);
+    document.removeEventListener('pointercancel', onUp);
+    el.classList.remove('dragging');
+    el.style.transform = '';
+    const ids = [...tabBar.querySelectorAll('.tab')].map(t => t.dataset.id);
+    data.tabs.sort((a, b) => ids.indexOf(a.id) - ids.indexOf(b.id));
+    save();
+  }
+
+  el.addEventListener('pointerdown', (e) => {
+    if (!sortingMode) return;
+    dragging = true;
+    startX = e.clientX;
+    el.classList.add('dragging');
+    el.style.transition = 'none';
+    document.addEventListener('pointermove', onMove, { passive: false });
+    document.addEventListener('pointerup', onUp);
+    document.addEventListener('pointercancel', onUp);
+    e.preventDefault();
+  });
 }
 
 /* ---------- 长按 ---------- */
