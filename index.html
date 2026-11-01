@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="航前检查单">
+<meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>航前检查单</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <h1>航前检查单</h1>
+  <button id="btnResetAll" class="btn-reset-all" type="button">全部重置</button>
+</header>
+
+<nav class="tab-bar" id="tabBar">
+  <!-- 标签由 JS 渲染 -->
+</nav>
+
+<main class="pages-viewport" id="pagesViewport">
+  <div class="pages-track" id="pagesTrack">
+    <!-- 页面由 JS 渲染 -->
+  </div>
+</main>
+
+<!-- 底部抽屉：添加/编辑检查项 -->
+<div class="sheet-mask" id="itemSheetMask">
+  <div class="sheet" id="itemSheet">
+    <div class="sheet-handle"></div>
+    <h2 id="itemSheetTitle">添加检查项</h2>
+    <input type="text" id="itemInput" class="sheet-input" placeholder="输入检查项内容" maxlength="60" autocomplete="off">
+    <div class="sheet-btns">
+      <button type="button" class="btn sheet-btn-cancel" id="itemSheetCancel">取消</button>
+      <button type="button" class="btn sheet-btn-ok" id="itemSheetOk">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 底部抽屉：添加/重命名标签页 -->
+<div class="sheet-mask" id="tabSheetMask">
+  <div class="sheet" id="tabSheet">
+    <div class="sheet-handle"></div>
+    <h2 id="tabSheetTitle">新增标签页</h2>
+    <input type="text" id="tabInput" class="sheet-input" placeholder="输入标签页名称" maxlength="12" autocomplete="off">
+    <div class="sheet-btns">
+      <button type="button" class="btn sheet-btn-cancel" id="tabSheetCancel">取消</button>
+      <button type="button" class="btn sheet-btn-ok" id="tabSheetOk">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 确认弹窗 -->
+<div class="sheet-mask" id="confirmMask">
+  <div class="confirm-box">
+    <h2 id="confirmTitle">确认</h2>
+    <p id="confirmText" class="confirm-text"></p>
+    <div class="sheet-btns">
+      <button type="button" class="btn sheet-btn-cancel" id="confirmCancel">取消</button>
+      <button type="button" class="btn sheet-btn-danger" id="confirmOk">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 检查项操作弹窗（编辑 / 删除） -->
+<div class="sheet-mask" id="actionMask">
+  <div class="action-box">
+    <p class="action-target" id="actionTargetText"></p>
+    <button type="button" class="btn action-btn" id="actionEdit">编辑</button>
+    <button type="button" class="btn action-btn action-btn-danger" id="actionDelete">删除</button>
+    <button type="button" class="btn action-btn action-btn-cancel" id="actionCancel">取消</button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
