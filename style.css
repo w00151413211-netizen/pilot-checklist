@@ -240,6 +240,18 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
 }
 .add-item-btn:active { background: rgba(52, 168, 83, .22); }
 
+/* 空页面时的大号添加按钮 */
+.add-item-btn.big {
+  display: block;
+  width: calc(100% - 36px);
+  max-width: 420px;
+  padding: 26px 0;
+  font-size: 17px;
+  border: 2px dashed rgba(52, 168, 83, .45);
+  border-radius: 14px;
+  background: rgba(52, 168, 83, .06);
+}
+
 .empty-tip {
   text-align: center;
   color: #bbb;
