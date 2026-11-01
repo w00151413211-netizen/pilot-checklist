@@ -1,6 +1,6 @@
 {
-  "name": "航前检查单",
-  "short_name": "航前检查单",
+  "name": "流程",
+  "short_name": "流程",
   "description": "飞行员航前/航班检查单，离线可用，数据保存在本地",
   "start_url": "./index.html",
   "scope": "./",
