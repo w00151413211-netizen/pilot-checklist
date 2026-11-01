@@ -72,7 +72,7 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
   font-size: 15px;
   font-weight: 600;
   color: #666;
-  padding: 9px 16px;
+  padding: 9px 14px;
   border-radius: 18px;
   background: var(--bg-soft);
   transition: background .18s, color .18s, transform .12s;
@@ -166,7 +166,8 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
   display: flex;
   align-items: center;
   gap: 14px;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   min-height: 58px;
   padding: 10px 18px;
   background: var(--bg);
@@ -380,3 +381,58 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
   margin-top: 2px;
 }
 .btn-weather:active { background: rgba(52, 168, 83, .25); }
+
+/* ============ 拖拽排序：检查项手柄 ============ */
+.item-grip {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c2c2c2;
+  font-size: 18px;
+  line-height: 1;
+  cursor: grab;
+  touch-action: none;
+}
+.item-grip:active { color: var(--green); }
+.item-row.dragging {
+  z-index: 20;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .16);
+}
+
+/* ============ 拖拽排序：标签栏排序模式 ============ */
+.tab.sortable {
+  touch-action: none;
+  cursor: grab;
+  animation: wiggle .35s ease-in-out infinite;
+}
+.tab.sortable.dragging {
+  animation: none;
+  z-index: 20;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .2);
+  cursor: grabbing;
+}
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-1.6deg); }
+  75% { transform: rotate(1.6deg); }
+}
+
+.tab-sort-toggle {
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--green-dark);
+  padding: 9px 11px;
+  border-radius: 18px;
+  background: rgba(52, 168, 83, .12);
+  border: 1.5px solid rgba(52, 168, 83, .35);
+}
+.tab-sort-toggle.active {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green);
+}
