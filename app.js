@@ -109,13 +109,12 @@ function renderPages() {
   pagesTrack.innerHTML = '';
   pagesTrack.style.transition = 'none';
   pagesTrack.style.transform = 'translateX(0)';
-  // 占位，保证 translateX(-index*100%) 正确
-  pagesTrack.style.width = (data.tabs.length * 100) + '%';
+  // 注意：不设置 track 总宽度。每个 page 的 flex-basis 即为视口宽度(100%)，
+  // translateX(-index*100%) 恰好等于一页宽度，页面内容也严格按视口宽度排版。
 
   data.tabs.forEach((tab, idx) => {
     const page = document.createElement('section');
     page.className = 'page';
-    page.style.width = (100 / data.tabs.length) + '%';
     page.dataset.index = idx;
 
     const doneCount = tab.items.filter(i => i.done).length;
@@ -141,8 +140,8 @@ function renderPages() {
 
     const addBtn = document.createElement('button');
     addBtn.type = 'button';
-    addBtn.className = 'btn add-item-btn';
-    addBtn.textContent = '+ 添加检查项';
+    addBtn.className = 'btn add-item-btn' + (tab.items.length === 0 ? ' big' : '');
+    addBtn.textContent = tab.items.length === 0 ? '＋ 添加第一个检查项' : '+ 添加检查项';
     addBtn.addEventListener('click', () => openItemSheet('add', tab.id));
     page.appendChild(addBtn);
 
