@@ -20,6 +20,7 @@
   <div class="header-left">
     <h1>流程</h1>
     <a class="btn-weather" href="https://map.wxnotam.com" target="_blank" rel="noopener">天气</a>
+    <button id="btnFuel" class="btn-weather btn-fuel" type="button">油单</button>
   </div>
   <button id="btnResetAll" class="btn-reset-all" type="button">全部重置</button>
 </header>
@@ -33,6 +34,47 @@
     <!-- 页面由 JS 渲染 -->
   </div>
 </main>
+
+<!-- 油单页面（全屏覆盖层） -->
+<div class="fuel-overlay" id="fuelOverlay" hidden>
+  <div class="fuel-head">
+    <button id="fuelBack" class="btn fuel-back" type="button">‹ 返回</button>
+    <h2>油单</h2>
+    <button id="fuelReset" class="btn fuel-reset" type="button">重置</button>
+  </div>
+
+  <div class="fuel-form">
+    <div class="fuel-row">
+      <label for="fuelDate">日期</label>
+      <input type="text" id="fuelDate" inputmode="numeric" placeholder="如 20261102"
+             autocomplete="off" enterkeyhint="done">
+      <span id="fuelDateWarn" class="fuel-warn" hidden>⚠ 已过期</span>
+    </div>
+
+    <div class="fuel-row fuel-row-pair">
+      <div class="fuel-cell">
+        <label for="fuelDep">起飞</label>
+        <input type="text" id="fuelDep" placeholder="____" autocomplete="off" enterkeyhint="done">
+      </div>
+      <div class="fuel-cell">
+        <label for="fuelArr">落地</label>
+        <input type="text" id="fuelArr" placeholder="____" autocomplete="off" enterkeyhint="done">
+      </div>
+    </div>
+
+    <div class="fuel-row fuel-row-pair">
+      <div class="fuel-cell">
+        <label for="fuelTotal">总油量</label>
+        <input type="text" id="fuelTotal" inputmode="decimal" placeholder="____"
+               autocomplete="off" enterkeyhint="done">
+      </div>
+      <div class="fuel-cell">
+        <label>中间</label>
+        <div class="fuel-mid" id="fuelMid"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- 底部抽屉：添加/编辑检查项 -->
 <div class="sheet-mask" id="itemSheetMask">
