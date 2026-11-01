@@ -436,3 +436,99 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
   color: #fff;
   border-color: var(--green);
 }
+
+/* ============ 油单页面 ============ */
+.btn-fuel { border: none; font-family: inherit; cursor: pointer; }
+
+.fuel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: calc(env(safe-area-inset-top) + 12px) 18px calc(env(safe-area-inset-bottom) + 24px);
+}
+
+.fuel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.fuel-head h2 { font-size: 22px; font-weight: 800; }
+
+.fuel-back, .fuel-reset {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--green-dark);
+  background: rgba(52, 168, 83, .12);
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+}
+.fuel-back:active, .fuel-reset:active { background: rgba(52, 168, 83, .25); }
+
+.fuel-form { display: flex; flex-direction: column; }
+
+.fuel-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 4px;
+  border-bottom: 1px solid var(--line);
+}
+.fuel-row-pair { gap: 16px; }
+
+.fuel-row > label,
+.fuel-cell > label {
+  flex-shrink: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.fuel-row > input {
+  flex: 1;
+  min-width: 0;
+  font-size: 17px;
+  font-family: inherit;
+  border: none;
+  outline: none;
+  text-align: right;
+  background: transparent;
+  color: #111;
+}
+
+.fuel-cell { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.fuel-cell input {
+  flex: 1;
+  min-width: 0;
+  font-size: 17px;
+  font-family: inherit;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #111;
+}
+
+.fuel-mid {
+  flex: 1;
+  min-width: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--green-dark);
+  text-align: right;
+}
+
+.fuel-warn {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #E5484D;
+}
+
+/* 修复：hidden 属性会被 display:flex 覆盖，需显式声明 */
+.fuel-overlay[hidden] { display: none; }
