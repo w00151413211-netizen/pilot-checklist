@@ -444,19 +444,20 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
   position: fixed;
   inset: 0;
   z-index: 60;
-  background: #fff;
+  background: #f7f7f7;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  padding: calc(env(safe-area-inset-top) + 12px) 18px calc(env(safe-area-inset-bottom) + 24px);
+  padding: calc(env(safe-area-inset-top) + 12px) 0 calc(env(safe-area-inset-bottom) + 24px);
 }
 
 .fuel-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  padding: 0 16px 14px;
 }
 .fuel-head h2 { font-size: 22px; font-weight: 800; }
 
@@ -471,55 +472,65 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
 }
 .fuel-back:active, .fuel-reset:active { background: rgba(52, 168, 83, .25); }
 
-.fuel-form { display: flex; flex-direction: column; }
+/* 白色卡片容器 */
+.fuel-form {
+  background: #fff;
+  border-radius: 12px;
+  margin: 16px;
+  padding: 10px 16px;
+}
 
+/* 每一行：标签在左、内容在右，行之间用极细分割线 */
 .fuel-row {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 4px;
-  border-bottom: 1px solid var(--line);
+  padding: 14px 0;
+  border-bottom: 0.5px solid #e5e5ea;
 }
+.fuel-row:last-child { border-bottom: none; }
 .fuel-row-pair { gap: 16px; }
 
+/* 左侧标签：中灰、16px、常规字重 */
 .fuel-row > label,
 .fuel-cell > label {
   flex-shrink: 0;
   font-size: 16px;
-  font-weight: 600;
-  color: #333;
+  font-weight: 400;
+  color: #8e8e93;
 }
 
-.fuel-row > input {
-  flex: 1;
-  min-width: 0;
-  font-size: 17px;
-  font-family: inherit;
-  border: none;
-  outline: none;
-  text-align: right;
-  background: transparent;
-  color: #111;
-}
+.fuel-cell { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; }
 
-.fuel-cell { flex: 1; display: flex; align-items: center; gap: 10px; min-width: 0; }
+/* 灰色输入块：圆角、无边框，填入后纯黑加粗 */
+.fuel-row > input,
 .fuel-cell input {
   flex: 1;
   min-width: 0;
-  font-size: 17px;
   font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  color: #000;
+  background: #f2f2f7;
   border: none;
   outline: none;
-  background: transparent;
-  color: #111;
+  border-radius: 8px;
+  padding: 8px 12px;
+  text-align: right;
 }
+.fuel-row > input::placeholder,
+.fuel-cell input::placeholder { color: #c2c2c8; }
 
+/* 中间计算结果：同灰块样式，文字用 iOS 绿 */
 .fuel-mid {
   flex: 1;
   min-width: 0;
-  font-size: 17px;
-  font-weight: 700;
-  color: var(--green-dark);
+  font-size: 16px;
+  font-weight: 500;
+  color: #34c759;
+  background: #f2f2f7;
+  border-radius: 8px;
+  padding: 8px 12px;
   text-align: right;
 }
 
