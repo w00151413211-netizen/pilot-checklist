@@ -1,5 +1,5 @@
 /* 航前检查单 - Service Worker：离线缓存 */
-const CACHE_NAME = 'pilot-checklist-v6';
+const CACHE_NAME = 'pilot-checklist-v7';
 const ASSETS = [
   './',
   './index.html',
