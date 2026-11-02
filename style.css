@@ -516,10 +516,10 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
   outline: none;
   border-radius: 8px;
   padding: 8px 12px;
-  text-align: right;
+  text-align: center;
 }
 .fuel-row > input::placeholder,
-.fuel-cell input::placeholder { color: #c2c2c8; }
+.fuel-cell input::placeholder { color: #c2c2c8; text-align: center; }
 
 /* 中间计算结果：同灰块样式，文字用 iOS 绿 */
 .fuel-mid {
@@ -531,7 +531,7 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
   background: #f2f2f7;
   border-radius: 8px;
   padding: 8px 12px;
-  text-align: right;
+  text-align: center;
 }
 
 .fuel-warn {
