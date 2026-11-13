@@ -21,6 +21,7 @@
     <h1>流程</h1>
     <a class="btn-weather" href="https://map.wxnotam.com" target="_blank" rel="noopener">天气</a>
     <button id="btnFuel" class="btn-weather btn-fuel" type="button">油单</button>
+    <button id="btnGear" class="btn-weather btn-gear" type="button">过夜装具</button>
   </div>
   <button id="btnResetAll" class="btn-reset-all" type="button">全部重置</button>
 </header>
@@ -72,6 +73,38 @@
         <label>中间</label>
         <div class="fuel-mid" id="fuelMid"></div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- 过夜装具页面（独立全屏覆盖层，不进入主标签栏） -->
+<div class="gear-overlay" id="gearOverlay" hidden>
+  <div class="gear-head">
+    <button id="gearBack" class="btn gear-nav-btn" type="button">‹ 返回</button>
+    <button id="gearReset" class="btn gear-nav-btn" type="button">重置本页</button>
+  </div>
+
+  <div class="gear-scroll">
+    <h2 class="gear-title">过夜装具</h2>
+    <p class="gear-progress" id="gearProgress"></p>
+
+    <div id="gearGroups" class="gear-groups">
+      <!-- 分组由 JS 渲染 -->
+    </div>
+
+    <button id="gearAddGroup" class="gear-add-group" type="button">＋ 添加分类</button>
+  </div>
+</div>
+
+<!-- 底部抽屉：过夜装具（添加/编辑 分类 或 装具） -->
+<div class="sheet-mask" id="gearSheetMask">
+  <div class="sheet" id="gearSheet">
+    <div class="sheet-handle"></div>
+    <h2 id="gearSheetTitle">添加分类</h2>
+    <input type="text" id="gearInput" class="sheet-input" maxlength="30" autocomplete="off">
+    <div class="sheet-btns">
+      <button type="button" class="btn sheet-btn-cancel" id="gearSheetCancel">取消</button>
+      <button type="button" class="btn sheet-btn-ok" id="gearSheetOk">保存</button>
     </div>
   </div>
 </div>
