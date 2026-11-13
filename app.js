@@ -34,6 +34,26 @@ function defaultData() {
   };
 }
 
+/* ---------- 过夜装具：独立的两级数据结构 ----------
+ * 与主标签页 data.tabs 完全分离，形如：
+ * [ { id, name: '飞行', items: [{ id, text, done }] }, ... ]
+ * 单独挂在 data.gear 上，随 save() 一并写入 localStorage。
+ */
+function defaultGear() {
+  const mk = (name, texts) => ({
+    id: uid(),
+    name,
+    items: texts.map(t => ({ id: uid(), text: t, done: false }))
+  });
+  return [
+    mk('飞行', [
+      '帽子', '领带', '肩章', '衬衣', '打底', '皮带',
+      '裤子', '黑袜', '皮鞋', '外套', '大衣', '羽绒服'
+    ]),
+    mk('常服', ['秋衣', '秋裤', '外套', '裤子', '常鞋', '拖鞋'])
+  ];
+}
+
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
@@ -61,6 +81,8 @@ function load() {
     data.activeTabId = data.tabs.length ? data.tabs[0].id : null;
   }
   if (!data.fuel || typeof data.fuel !== 'object') data.fuel = { date: '', dep: '', arr: '', total: '' };
+  // 旧版本数据没有 gear 字段时，补写默认分组（不会覆盖用户已保存/删空的数据）
+  if (!Array.isArray(data.gear)) { data.gear = defaultGear(); save(); }
 }
 
 function save() {
@@ -574,6 +596,10 @@ document.getElementById('actionEdit').addEventListener('click', () => {
     if (tab) openItemSheet('edit', tab.id, ctx.item.id);
   } else if (ctx.type === 'tab') {
     openTabSheet('rename', ctx.tab.id);
+  } else if (ctx.type === 'gear-group') {
+    openGearSheet('edit-group', ctx.gid);
+  } else if (ctx.type === 'gear-item') {
+    openGearSheet('edit-item', ctx.gid, ctx.itemId);
   }
 });
 document.getElementById('actionDelete').addEventListener('click', () => {
@@ -599,6 +625,23 @@ document.getElementById('actionDelete').addEventListener('click', () => {
       }
       save();
       render();
+    });
+  } else if (ctx.type === 'gear-group') {
+    const g = data.gear.find(x => x.id === ctx.gid);
+    if (!g) return;
+    confirmDialog('删除分类', `确定删除分类「${g.name}」及其全部装具吗？`, () => {
+      data.gear = data.gear.filter(x => x.id !== ctx.gid);
+      save();
+      renderGear();
+    });
+  } else if (ctx.type === 'gear-item') {
+    const g = data.gear.find(x => x.id === ctx.gid);
+    const it = g && g.items.find(x => x.id === ctx.itemId);
+    if (!it) return;
+    confirmDialog('删除装具', `确定删除「${it.text}」吗？`, () => {
+      g.items = g.items.filter(x => x.id !== ctx.itemId);
+      save();
+      renderGear();
     });
   }
 });
@@ -628,17 +671,20 @@ document.getElementById('confirmCancel').addEventListener('click', () => {
   m.addEventListener('click', (e) => { if (e.target === m) hideMask(m); });
 });
 
-/* ---------- 全部重置（同时清空油单） ---------- */
+/* ---------- 全部重置（同时清空油单 + 过夜装具勾选） ---------- */
 document.getElementById('btnResetAll').addEventListener('click', () => {
   const total = data.tabs.reduce((s, t) => s + t.items.filter(i => i.done).length, 0);
+  const gearDone = gearDoneCount();
   const hasFuel = fuelHasData();
-  if (total === 0 && !hasFuel) return;
-  const msg = total > 0
-    ? `将清除所有标签页共 ${total} 个勾选${hasFuel ? '，并清空油单' : ''}，确定吗？`
-    : '将清空油单全部填写内容，确定吗？';
-  confirmDialog('全部重置', msg, () => {
+  if (total === 0 && gearDone === 0 && !hasFuel) return;
+  const parts = [];
+  if (total > 0) parts.push(`所有标签页共 ${total} 个勾选`);
+  if (gearDone > 0) parts.push(`过夜装具 ${gearDone} 个勾选`);
+  if (hasFuel) parts.push('油单填写内容');
+  confirmDialog('全部重置', `将清除${parts.join('、')}，确定吗？`, () => {
     data.tabs.forEach(t => t.items.forEach(i => i.done = false));
     clearFuel();
+    clearGearChecks();
     save();
     render();
   });
@@ -726,10 +772,210 @@ document.getElementById('fuelReset').addEventListener('click', () => {
   confirmDialog('重置油单', '将清空油单全部填写内容，确定吗？', clearFuel);
 });
 
+/* =========================================================
+ * 过夜装具（独立模块：分组 Group + 装具 Item 两级）
+ * ========================================================= */
+const gearOverlay = document.getElementById('gearOverlay');
+const gearGroupsBox = document.getElementById('gearGroups');
+const gearProgress = document.getElementById('gearProgress');
+const gearSheetMask = document.getElementById('gearSheetMask');
+const gearInput = document.getElementById('gearInput');
+const gearSheetTitle = document.getElementById('gearSheetTitle');
+let gearSheetCtx = null; // { mode:'add-group'|'edit-group'|'add-item'|'edit-item', gid, itemId }
+
+function openGear() {
+  renderGear();
+  gearOverlay.hidden = false;
+}
+function closeGear() { gearOverlay.hidden = true; }
+
+function gearDoneCount() {
+  return data.gear.reduce((s, g) => s + g.items.filter(i => i.done).length, 0);
+}
+function gearTotalCount() {
+  return data.gear.reduce((s, g) => s + g.items.length, 0);
+}
+function updateGearProgress() {
+  gearProgress.innerHTML = `<b>${gearDoneCount()}</b> / ${gearTotalCount()} 已完成`;
+}
+
+/* 只清空勾选（保留分类与装具），供页内重置 / 全局全部重置复用 */
+function clearGearChecks() {
+  data.gear.forEach(g => g.items.forEach(i => i.done = false));
+  save();
+  renderGear();
+}
+
+/* ---------- 渲染：分组白卡片 + 装具（复用主页面勾选样式） ---------- */
+function renderGear() {
+  gearGroupsBox.innerHTML = '';
+  updateGearProgress();
+
+  if (data.gear.length === 0) {
+    const tip = document.createElement('p');
+    tip.className = 'gear-empty';
+    tip.textContent = '暂无分类，点击下方按钮添加';
+    gearGroupsBox.appendChild(tip);
+    return;
+  }
+
+  data.gear.forEach(g => {
+    const sec = document.createElement('section');
+    sec.className = 'gear-group';
+    sec.dataset.gid = g.id;
+
+    // 分类大标题 + 右侧「⋯」管理图标
+    const head = document.createElement('div');
+    head.className = 'gear-group-head';
+    const title = document.createElement('h3');
+    title.className = 'gear-group-title';
+    title.textContent = g.name;
+    const more = document.createElement('button');
+    more.type = 'button';
+    more.className = 'gear-group-more';
+    more.textContent = '⋯';
+    more.setAttribute('aria-label', '管理分类');
+    more.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openGearActionSheet('gear-group', g.id);
+    });
+    head.appendChild(title);
+    head.appendChild(more);
+    // 长按分类标题同样可唤起管理
+    attachLongPress(title, () => openGearActionSheet('gear-group', g.id));
+    sec.appendChild(head);
+
+    // 装具勾选列表
+    const ul = document.createElement('ul');
+    ul.className = 'gear-list item-list';
+    g.items.forEach(it => ul.appendChild(buildGearItem(it, g)));
+    sec.appendChild(ul);
+
+    // 该分类下添加装具
+    const addItem = document.createElement('button');
+    addItem.type = 'button';
+    addItem.className = 'gear-add-item';
+    addItem.textContent = '＋ 添加装具';
+    addItem.addEventListener('click', () => openGearSheet('add-item', g.id));
+    sec.appendChild(addItem);
+
+    gearGroupsBox.appendChild(sec);
+  });
+}
+
+function buildGearItem(it, g) {
+  const li = document.createElement('li');
+  li.className = 'item-row gear-item' + (it.done ? ' done' : '');
+  li.dataset.id = it.id;
+  li.innerHTML = `
+    <div class="item-main">
+      <span class="checkbox">${GOLD_CHECK_SVG}</span>
+      <span class="item-text"></span>
+      <button type="button" class="gear-item-more" aria-label="编辑装具">⋯</button>
+    </div>
+  `;
+  li.querySelector('.item-text').textContent = it.text;
+
+  // 勾选 / 取消：与主页面完全一致的动画 + 变灰删除线
+  li.querySelector('.checkbox').addEventListener('click', (e) => {
+    e.stopPropagation(); // 不冒泡触发管理菜单
+    it.done = !it.done;
+    li.classList.toggle('done', it.done);
+    const cb = li.querySelector('.checkbox');
+    cb.classList.remove('pop');
+    void cb.offsetWidth; // 重启动画
+    cb.classList.add('pop');
+    updateGearProgress();
+    save();
+  });
+
+  // 点击文字 或 右侧「⋯」图标 -> 编辑/删除菜单
+  const openMenu = () => openGearActionSheet('gear-item', g.id, it.id);
+  li.querySelector('.item-main').addEventListener('click', openMenu);
+  li.querySelector('.gear-item-more').addEventListener('click', (e) => {
+    e.stopPropagation();
+    openMenu();
+  });
+
+  return li;
+}
+
+/* 复用主页面的 iOS 风格操作弹窗（编辑 / 删除） */
+function openGearActionSheet(type, gid, itemId) {
+  if (type === 'gear-group') {
+    const g = data.gear.find(x => x.id === gid);
+    actionCtx = { type, gid };
+    actionTargetText.textContent = `分类：${g ? g.name : ''}`;
+  } else {
+    const g = data.gear.find(x => x.id === gid);
+    const it = g && g.items.find(x => x.id === itemId);
+    actionCtx = { type, gid, itemId };
+    actionTargetText.textContent = it ? it.text : '';
+  }
+  showMask(actionMask);
+}
+
+/* ---------- 输入抽屉：分类 / 装具 的添加与编辑 ---------- */
+function openGearSheet(mode, gid, itemId) {
+  gearSheetCtx = { mode, gid, itemId };
+  const titles = {
+    'add-group': '添加分类', 'edit-group': '编辑分类名称',
+    'add-item': '添加装具', 'edit-item': '编辑装具'
+  };
+  gearSheetTitle.textContent = titles[mode];
+  gearInput.value = '';
+  if (mode === 'edit-group') {
+    const g = data.gear.find(x => x.id === gid);
+    gearInput.value = g ? g.name : '';
+  } else if (mode === 'edit-item') {
+    const g = data.gear.find(x => x.id === gid);
+    const it = g && g.items.find(x => x.id === itemId);
+    gearInput.value = it ? it.text : '';
+  }
+  showMask(gearSheetMask);
+  setTimeout(() => gearInput.focus(), 250);
+}
+
+function submitGearSheet() {
+  const text = gearInput.value.trim();
+  hideMask(gearSheetMask);
+  if (!text || !gearSheetCtx) return;
+  const { mode, gid, itemId } = gearSheetCtx;
+  const g = data.gear.find(x => x.id === gid);
+  if (mode === 'add-group') {
+    data.gear.push({ id: uid(), name: text, items: [] });
+  } else if (mode === 'edit-group' && g) {
+    g.name = text;
+  } else if (mode === 'add-item' && g) {
+    g.items.push({ id: uid(), text, done: false });
+  } else if (mode === 'edit-item' && g) {
+    const it = g.items.find(x => x.id === itemId);
+    if (it) it.text = text;
+  }
+  save();
+  renderGear();
+}
+
+document.getElementById('gearSheetOk').addEventListener('click', submitGearSheet);
+gearInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitGearSheet(); });
+document.getElementById('gearSheetCancel').addEventListener('click', () => hideMask(gearSheetMask));
+gearSheetMask.addEventListener('click', (e) => { if (e.target === gearSheetMask) hideMask(gearSheetMask); });
+
+/* ---------- 入口 / 返回 / 添加分类 / 重置本页 ---------- */
+document.getElementById('btnGear').addEventListener('click', openGear);
+document.getElementById('gearBack').addEventListener('click', closeGear);
+document.getElementById('gearAddGroup').addEventListener('click', () => openGearSheet('add-group'));
+document.getElementById('gearReset').addEventListener('click', () => {
+  const n = gearDoneCount();
+  if (n === 0) return;
+  confirmDialog('重置本页', `将清除过夜装具全部 ${n} 个勾选，确定吗？`, clearGearChecks);
+});
+
 /* ---------- 启动 ---------- */
 load();
 render();
 renderFuel();
+renderGear();
 
 /* 注册 Service Worker（离线缓存，需 HTTPS 或 localhost） */
 if ('serviceWorker' in navigator) {
