@@ -40,16 +40,18 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px 8px;
+  gap: 8px;
+  padding: 12px 14px 8px;
   flex-shrink: 0;
 }
-.app-header h1 { font-size: 26px; font-weight: 800; letter-spacing: .5px; }
+.app-header h1 { font-size: 26px; font-weight: 800; letter-spacing: .5px; flex-shrink: 0; }
 
 .btn-reset-all {
-  font-size: 14px;
+  flex-shrink: 0;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--green-dark);
-  padding: 8px 14px;
+  padding: 7px 11px;
   border-radius: 20px;
   background: rgba(52, 168, 83, .12);
 }
@@ -364,18 +366,28 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
 .action-btn-danger { color: var(--danger); font-weight: 600; }
 .action-btn-cancel { border-bottom: none; font-weight: 700; }
 
-/* ============ 天气按钮 ============ */
-.header-left { display: flex; align-items: center; gap: 12px; }
+/* ============ 天气 / 油单 / 过夜装具 胶囊按钮 ============ */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  overflow-x: auto;          /* 入口较多时允许横向滑动，不挤压「全部重置」 */
+  scrollbar-width: none;
+}
+.header-left::-webkit-scrollbar { display: none; }
 
 .btn-weather {
+  flex-shrink: 0;
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--green-dark);
   text-decoration: none;
-  padding: 8px 14px;
+  padding: 7px 11px;
   border-radius: 20px;
   background: rgba(52, 168, 83, .12);
   margin-top: 2px;
@@ -543,3 +555,134 @@ button { font-family: inherit; border: none; background: none; cursor: pointer; 
 
 /* 修复：hidden 属性会被 display:flex 覆盖，需显式声明 */
 .fuel-overlay[hidden] { display: none; }
+
+/* ============ 过夜装具页面 ============ */
+.gear-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: #f7f7f7;
+  display: flex;
+  flex-direction: column;
+  padding-top: calc(env(safe-area-inset-top) + 10px);
+}
+/* 关键：hidden 属性会被 display:flex 覆盖，必须显式声明 */
+.gear-overlay[hidden] { display: none; }
+
+.gear-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px 6px;
+  flex-shrink: 0;
+}
+.gear-nav-btn {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--green-dark);
+  background: rgba(52, 168, 83, .12);
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+}
+.gear-nav-btn:active { background: rgba(52, 168, 83, .25); }
+
+.gear-scroll {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 16px calc(40px + env(safe-area-inset-bottom));
+}
+
+/* 页面大标题 */
+.gear-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #000;
+  text-align: left;
+  padding: 12px 2px 2px;
+}
+.gear-progress {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  padding: 0 2px 16px;
+}
+.gear-progress b { color: var(--green-dark); font-size: 15px; }
+
+/* 分组：白色圆角卡片 */
+.gear-group {
+  background: #fff;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  padding: 2px 0 8px;
+  overflow: hidden;
+}
+.gear-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 16px 10px;
+}
+.gear-group-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #000;
+  text-align: left;
+  word-break: break-word;
+}
+
+/* 管理图标（分类标题右侧 / 装具行右侧） */
+.gear-group-more, .gear-item-more {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 20px;
+  line-height: 1;
+  color: #aaa;
+  background: transparent;
+}
+.gear-group-more:active, .gear-item-more:active { background: #f0f0f0; color: var(--green-dark); }
+
+/* 装具列表：复用主页面 .item-row / .checkbox / .item-text / .done 样式 */
+.gear-list .item-row { border-bottom: 0.5px solid #e5e5ea; }
+.gear-list .item-row:last-child { border-bottom: none; }
+.gear-list .item-main { padding: 8px 16px; min-height: 52px; gap: 12px; }
+.gear-list .item-text { font-size: 17px; }
+.gear-item-more { margin-left: 2px; color: #c8c8cd; font-size: 17px; width: 28px; height: 28px; }
+
+.gear-add-item {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 8px 16px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--green-dark);
+  padding: 10px 0;
+  border-radius: 10px;
+  background: rgba(52, 168, 83, .10);
+}
+.gear-add-item:active { background: rgba(52, 168, 83, .22); }
+
+.gear-add-group {
+  display: block;
+  width: 100%;
+  margin: 4px 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--green-dark);
+  padding: 14px 0;
+  border: 2px dashed rgba(52, 168, 83, .45);
+  border-radius: 12px;
+  background: rgba(52, 168, 83, .05);
+}
+.gear-add-group:active { background: rgba(52, 168, 83, .15); }
+
+.gear-empty {
+  text-align: center;
+  color: #bbb;
+  font-size: 15px;
+  padding: 40px 0 20px;
+}
